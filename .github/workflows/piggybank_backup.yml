@@ -1,4 +1,4 @@
-name: Auto-Zip Project Backup
+name: BackupPiggy
 
 on:
   push:
