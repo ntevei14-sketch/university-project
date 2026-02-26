@@ -1,0 +1,22 @@
+name: Auto-Zip Project Backup
+
+on:
+  push:
+    branches: ["piggybank"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create Zip Archive
+        run: zip -r project_snapshot.zip . -x "venv/*" "__pycache__/*" ".git/*" ".github/*" ".vscode/*"
+
+      - name: Upload Backup Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-kivy-backup
+          path: project_snapshot.zip
+          retention-days: 30
