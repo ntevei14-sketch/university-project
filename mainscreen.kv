@@ -1,0 +1,141 @@
+#: import hex_color kivy.utils.get_color_from_hex
+<MainScreen>:
+    MDNavigationLayout:
+        ScreenManager:
+            MDScreen:
+                md_bg_color: self.theme_cls.backgroundColor
+
+                BoxLayout:
+                    orientation: 'vertical'
+                    
+
+                    MDTopAppBar:
+                        id: topbaraction
+                        type: "small"
+                        theme_bg_color: "Custom"
+                        md_bg_color:hex_color("#ff00aae0")
+                        MDTopAppBarLeadingButtonContainer:
+                            MDActionTopAppBarButton:
+                                icon: "menu"
+                               
+                            MDActionTopAppBarButton:
+                                icon: "theme-light-dark"
+                                on_release: app.switch_theme_style()
+                        
+                        MDTopAppBarTitle:
+                            text: "PiggyBankExpanseTracker"
+                            halign: "center"
+
+                        MDTopAppBarTrailingButtonContainer:
+                            MDActionTopAppBarButton:
+                                id: account_button
+                                icon: "account-circle-outline"
+                    BoxLayout:
+                        orientation:'vertical'
+                        spacing:10
+                        padding:50
+                        pos_hint: {'center_x': 0.5,'center_y': 0.5}
+                        MDCard:
+                            size_hint_x: None
+                            size: 400,200
+                            pos_hint: {'center_x': 0.5,'center_y': 0.5}
+                            MDLabel:
+                                text:"test_balance"
+                                halign:"center"
+                        MDCard:
+                            size_hint_x: None
+                            size: 400,200
+                            pos_hint: {'center_x': 0.5,'center_y': 0.5}
+                            MDLabel:
+                                size_hint_x: None
+                                size: 400,200
+                                text:"test_total"
+                                halign:"center"
+                    AnchorLayout:
+                        anchor_x: "center"
+                        anchor_y: "center" 
+                        GridLayout:
+                            cols:4
+                            rows:2
+                            spacing:30
+                            padding:20
+                            size_hint: None, None
+                            size: 520,200
+                            MDButton:
+                                style: "filled"
+                                on_press: app.root.current = 'addfund'
+                                MDButtonText:
+                                    id:add_fund
+                                    text: "Add fund"
+                        
+                            MDButton:
+                                id: add_bill
+                                style: "filled"
+
+                                MDButtonText:
+                                    text: "Add bill"
+                            MDButton:
+                                id: add_target
+                                style: "filled"
+
+                                MDButtonText:
+                            
+                                    text: "Add Target"
+                            MDButton:
+                                id: overview
+                                style: "filled"
+
+                                MDButtonText:
+                                    text: "Savenigs Overview"
+                            MDButton:
+                                id: test5_button
+                                style: "filled"
+
+                                MDButtonText:
+                                    text: "test5"
+                            MDButton:
+                                id: test6_button
+                                style: "filled"
+
+                                MDButtonText:
+                                    text: "test6"
+                            MDButton:
+                                id: test7_button
+                                style: "filled"
+
+                                MDButtonText:
+                                    text: "test7"
+                            MDButton:
+                                id: test8_button
+                                style: "filled"
+
+                                MDButtonText:
+                                    text: "test8"
+                            
+                    BoxLayout: 
+                        orientation: "vertical"                   
+                        spacing: 15
+                        padding: 15
+
+                        MDButton:
+                            id: login_page
+                            style: "filled"
+                            size_hint_x: None
+                            width: 300
+                            pos_hint: {"center_x": 0.5}
+                            on_press: app.root.current = 'login'
+                            
+                            MDButtonText:
+                                text:"Login Page"
+                          
+
+                        MDButton:
+                            id: register_page
+                            style: "filled"
+                            size_hint_x: None
+                            width: 300
+                            pos_hint: {"center_x": 0.5}  
+                            on_press: app.root.current = 'register'
+
+                            MDButtonText:
+                                text:"Register Page"

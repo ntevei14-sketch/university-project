@@ -1,0 +1,14 @@
+# Ignore the virtual environment
+venv/
+.venv/
+env/
+
+# Ignore Python cache (compiled files)
+__pycache__/
+*.py[cod]
+
+# Ignore VS Code settings
+.vscode/
+
+# Ignore Kivy log files
+.kivy/

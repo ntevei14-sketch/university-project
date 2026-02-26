@@ -1,0 +1,108 @@
+#: import hex_color kivy.utils.get_color_from_hex
+<LoginScreen>:
+    MDScreen:
+        md_bg_color: self.theme_cls.backgroundColor
+
+        BoxLayout:
+            orientation: 'vertical'
+                    
+
+            MDTopAppBar:
+                id: topbaraction
+                type: "small"
+                theme_bg_color: "Custom"
+                md_bg_color:hex_color("#ff00aae0")
+
+                MDTopAppBarLeadingButtonContainer:
+                    MDActionTopAppBarButton:
+                        icon: "home"
+                        on_release: app.root.current ="main"       
+                    MDActionTopAppBarButton:
+                        icon: "theme-light-dark"
+                        on_release: app.switch_theme_style()
+                        
+                MDTopAppBarTitle:
+                    text: "PiggyBankExpanseTracker"
+                    halign: "center"
+
+                MDTopAppBarTrailingButtonContainer:
+                    MDActionTopAppBarButton:
+                        id: account_button
+                        icon: "account-circle-outline"
+            FloatLayout:
+                orientation: 'vertical'
+                pos_hint: {'center_x': 0.5,'center_y': 0.5}
+                MDCard:
+                    size_hint: None,None
+                    size:600,350
+                    padding: 16
+                    pos_hint: {'center_x': 0.5,'center_y': 0.5}
+                    elevation: 10
+
+                    MDBoxLayout:
+                        orientation: 'vertical'
+                        spacing: 12
+                        size_hint:1,1
+                        padding: 8
+                        pos_hint: {'center_x': 0.5,'center_y': 0.5}
+                      
+                        MDLabel:
+                            text: "Login"
+                            halign:"center"
+                        MDTextField: #create the textfiled and adjusting the size/pose etc
+                            id:email
+                            mode: "outlined"
+                            size_hint_x:None
+                            width: "240"
+                            pos_hint: {'center_x': 0.5}
+                            spacing: 10
+                            MDTextFieldLeadingIcon: #icon
+                                icon:"email"
+                            MDTextFieldHintText: #the hint will be show inside and on the top of the edge of the bar
+                                text:"email"
+                                text_color_normal: "pink"
+                        Widget: #empty widget for spacing
+                            size_hint_y: None
+                            height: 4
+                        MDTextField: #create the textfiled and adjusting the size/pose etc
+                            id:password
+                            mode: "outlined"
+                            size_hint_x:None
+                            width: "240"
+                            password: True
+                            pos_hint: {'center_x': 0.5,}
+                            MDTextFieldLeadingIcon: #icon
+                                icon:"lock"
+                            MDTextFieldHintText: #the hint will be show inside and on the top of the edge of the bar
+                                text:"Password"
+                                text_color_normal: "pink"
+                            MDTextFieldTrailingIcon:
+                                icon:"eye-off"
+                        Widget: #empty widget for spacing
+                            size_hint_y: None
+                            height: 4
+                        BoxLayout:
+                            spacing: 15 
+                            padding: 30
+                            pos_hint: {'center_x': 0.5}
+                            size_hint_x: None
+                            width: self.minimum_width
+                            
+                            MDButton:
+                                id:login_button
+                                style: "filled"
+                                size_hint_x: None
+                                width:800
+                                on_press: root.login_process()
+                                MDButtonText:
+                                    text: "Login"
+
+                            MDButton:
+                                id:register_page
+                                style: "filled"
+                                size_hint_x: None
+                                width:800
+                                on_press:app.root.current = 'register'
+            
+                                MDButtonText:
+                                    text: "Register Page"

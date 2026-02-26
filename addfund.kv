@@ -1,0 +1,47 @@
+<AddFund>
+    
+    MDScreen:
+        md_bg_color: self.theme_cls.backgroundColor
+        MDFloatLayout:
+        MDCard:
+            size_hint: None, None
+            size: 500, 200
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}
+        MDLabel:
+            text: "Add Fund"
+            font_size: 60
+            pos_hint: {"center_x": 0.5, "center_y": 0.59}
+            halign: "center"
+            padding: 20
+
+        
+        MDTextField:
+            id: amount_input
+            mode: "outlined"
+            pos_hint: {'center_x': 0.5,'center_y': 0.5}
+            padding: 20
+            size_hint_x: None
+            size: (200, 50)
+            filter: "float"
+            MDTextFieldLeadingIcon:
+                icon: "currency-usd"
+            MDTextFieldHintText:
+                text: "Enter amount"
+                text_color_normal: "pink"
+        MDButton:
+            style: "filled"
+            size_hint: (800,100)
+            padding: 40
+            spacing: 10
+            pos_hint: {'center_x': 0.45,'top': 0.43}
+            MDButtonText:
+                text: "Add"
+        MDButton:
+            style: "filled"
+            size_hint:(800,100)
+            padding: 40
+            spacing: 10
+            pos_hint: {'center_x': 0.55,'top': 0.43}
+            MDButtonText:
+                text: "clear"
+            
