@@ -1,0 +1,22 @@
+#: import hex_color kivy.utils.get_color_from_hex
+<SplashScreen>
+    MDScreen:
+        md_bg_color: self.theme_cls.backgroundColor
+        FloatLayout:
+            Image:
+                id:logo
+                source: "Assist/شعار_الجامعة_السعودية_الإلكترونية.png"
+                size_hint: 0.5, 0.5
+                pos_hint: {'center_x':0.5,'center_y':0.6}
+            MDLinearProgressIndicator:
+                id:s_progress
+                value:0
+                size_hint_x: .6
+                pos_hint: {'center_x': 0.5,'center_y': 0.25}
+            MDLabel:
+                text: "Lunching PiggyBank"
+                size_hint_x: 1
+                halign: "center"
+                theme_text_color:"Custom"
+                text_color:"#ff00aae0"
+                pos_hint: {'center_x': 0.5,'center_y': 0.35}

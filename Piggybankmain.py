@@ -1,14 +1,36 @@
 # importing necessary libraries
 from kivymd.app import MDApp
 from kivy.lang import Builder
-from kivy.uix.screenmanager import ScreenManager, Screen, NoTransition
+from kivy.clock import Clock
+from kivy.uix.screenmanager import ScreenManager, Screen, NoTransition, FadeTransition
 # from kivymd.uix.menu import MDDropdownMenu
 # from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
+from kivymd.uix.progressindicator import MDLinearProgressIndicator
+from kivy.animation import Animation
 from db import get_connection, create_table, add_user, verify_user
 
 
 class MainScreen(Screen):
     pass
+
+
+class SplashScreen(Screen):
+
+    def on_enter(self, *args):
+        self.ids.s_progress.value = 0
+        anime = Animation(value=100, duration=1.5, t="linear")
+
+        anime.bind(on_complete=self.switch_to_main)
+
+        anime.start(self.ids.s_progress)
+
+        self.manager.transition = FadeTransition(duration=0.5)
+
+    def switch_to_main(self, *args):
+
+        self.manager.current = "main"
+
+        self.manager.transition = NoTransition()
 
 
 class LoginScreen(Screen):
@@ -73,19 +95,6 @@ class RegisterScreen(Screen):
                 print(f"something went worng {e}")
         else:
             print("please fill the empty filed")
- # function to toggle password visibility in the login screen and register screen(not working need to do)
-
-    def toggle_password_visibility(self):
-
-        password_field = self.ids.r_password
-        eye_button = self.ids.r_password.ids.eye_button
-
-        if password_field.password:
-            password_field.password = False  # Show the password
-            eye_button.icon = "eye"  # Change icon to "eye" (show)
-        else:
-            password_field.password = True  # Hide the password
-            eye_button.icon = "eye-off"  # Change icon to "eye-off" (hide)
 
 
 class PiggyBankLauncher(MDApp):
@@ -100,16 +109,19 @@ class PiggyBankLauncher(MDApp):
         self.theme_cls.theme_style = "Light"
         self.theme_cls.primary_palette = "Indigo"
         # builder
+        Builder.load_file("splashscreen.kv")
         Builder.load_file("mainscreen.kv")
         Builder.load_file("loginscreen.kv")
         Builder.load_file("registerscreen.kv")
         Builder.load_file("addfund.kv")
         # screens
         sm = ScreenManager(transition=NoTransition())
+        sm.add_widget(SplashScreen(name="splash"))
         sm.add_widget(MainScreen(name="main"))
         sm.add_widget(LoginScreen(name="login"))
         sm.add_widget(RegisterScreen(name="register"))
         sm.add_widget(AddFund(name="addfund"))
+        sm.current = "splash"
         return sm
 
         # test buttons
