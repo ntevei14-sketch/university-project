@@ -29,6 +29,7 @@
                     MDActionTopAppBarButton:
                         id: account_button
                         icon: "account-circle-outline"
+                        on_release: app.open_account_menu(self)
                     
                             
             FloatLayout:
@@ -68,7 +69,7 @@
                         Widget: #empty widget for spacing
                             size_hint_y: None
                             height: 4
-                        MDTextField: #create the textfiled and adjusting the size/pose etc
+                        MDTextField:
                             id:r_password
                             mode: "outlined"
                             size_hint_x:None
@@ -77,11 +78,13 @@
                             pos_hint: {'center_x': 0.5,}
                             MDTextFieldLeadingIcon: #icon
                                 icon:"lock"
-                            MDTextFieldHintText: #the hint will be show inside and on the top of the edge of the bar
+                            MDTextFieldHintText: 
                                 text:"Password"
                                 text_color_normal: "pink"
+
                             MDTextFieldTrailingIcon:
-                                icon:'eye-off'
+                                icon:'eye-off'  if r_password.password else "eye"    
+                                on_touch_down: if self.collide_point(*args[1].pos): r_password.password = not r_password.password
                         MDTextField: #create the textfiled and adjusting the size/pose etc
                             id:r_email
                             mode: "outlined"
@@ -99,6 +102,7 @@
                             size_hint_x:None
                             width: "240"
                             pos_hint: {'center_x': 0.5,}
+                            input_filter:"int"
                             MDTextFieldLeadingIcon: #icon
                                 icon:"phone"
                             MDTextFieldHintText: #the hint will be show inside and on the top of the edge of the bar
@@ -124,13 +128,3 @@
                                 on_press: root.signup_user()
                                 MDButtonText:
                                     text: "register"
-
-                            MDButton:
-                                id:login_page
-                                style: "filled"
-                                size_hint_x: None
-                                width:800
-                                on_press:root.current("login")
-            
-                                MDButtonText:
-                                    text: "Login Page"

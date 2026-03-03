@@ -1,9 +1,9 @@
-<AddFund>:
+<Bill>
     MDScreen:
         md_bg_color: self.theme_cls.backgroundColor
-
     MDBoxLayout:
         orientation: 'vertical'
+
         MDTopAppBar:
             id: topbaraction
             type: "small"
@@ -33,33 +33,51 @@
 
             MDCard:
                 size_hint: None, None
-                size: "320dp", "350dp"
+                size: "320dp", "420dp"
                 padding: "16dp"
                 elevation: 2
                 style: "elevated"
 
                 MDBoxLayout:
                     orientation: 'vertical'
-                    spacing: "20dp"
+                    spacing: "15dp"
                     adaptive_height: True
                     pos_hint: {"center_x": .5, "center_y": .5}
 
                     MDLabel:
-                        text: "Add New Funds"
+                        text: "Add New Bill"
                         style: "headline-small"
                         halign: "center"
                         adaptive_height: True
+                        theme_text_color: "Primary"
 
                     MDTextField:
-                        id: fund_amount
+                        id: bill_amount
                         mode: "outlined"
                         input_filter: "float"
                         MDTextFieldHintText:
-                            text: "Amount"
+                            text: "Amount (e.g. 50.25)"
+                        MDTextFieldLeadingIcon:
+                            icon: "currency-usd"
+
+                    MDButton:
+                        id: drop_item
+                        style: "outlined"
+                        pos_hint: {"center_x": .5}
+                        on_release: root.open_category_menu(self)
+                        MDButtonText:
+                            text: "Select Category"
 
                     MDButton:
                         style: "filled"
                         pos_hint: {"center_x": .5}
-                        on_release: root.save_income()
+                        on_release: root.save_expense()
                         MDButtonText:
-                            text: "Save Income"
+                            text: "Save Expense"
+                    
+                    MDButton:
+                        style: "text"
+                        pos_hint: {"center_x": .5}
+                        on_release: app.root.current = "main"
+                        MDButtonText:
+                            text: "Cancel"

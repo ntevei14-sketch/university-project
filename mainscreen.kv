@@ -30,6 +30,7 @@
                             MDActionTopAppBarButton:
                                 id: account_button
                                 icon: "account-circle-outline"
+                                on_release: app.open_account_menu(self)
                     BoxLayout:
                         orientation:'vertical'
                         spacing:10
@@ -40,6 +41,7 @@
                             size: 400,200
                             pos_hint: {'center_x': 0.5,'center_y': 0.5}
                             MDLabel:
+                                id:balance_label
                                 text:"test_balance"
                                 halign:"center"
                         MDCard:
@@ -47,8 +49,8 @@
                             size: 400,200
                             pos_hint: {'center_x': 0.5,'center_y': 0.5}
                             MDLabel:
+                                id: total_label
                                 size_hint_x: None
-                                size: 400,200
                                 text:"test_total"
                                 halign:"center"
                     AnchorLayout:
@@ -56,7 +58,7 @@
                         anchor_y: "center" 
                         GridLayout:
                             cols:4
-                            rows:2
+                            rows:1
                             spacing:30
                             padding:20
                             size_hint: None, None
@@ -71,71 +73,23 @@
                             MDButton:
                                 id: add_bill
                                 style: "filled"
-
+                                on_press:app.root.current ="bill"
                                 MDButtonText:
                                     text: "Add bill"
                             MDButton:
                                 id: add_target
                                 style: "filled"
-
+                                on_release: app.root.current = "target"
                                 MDButtonText:
-                            
                                     text: "Add Target"
                             MDButton:
                                 id: overview
                                 style: "filled"
 
                                 MDButtonText:
-                                    text: "Savenigs Overview"
-                            MDButton:
-                                id: test5_button
-                                style: "filled"
-
-                                MDButtonText:
-                                    text: "test5"
-                            MDButton:
-                                id: test6_button
-                                style: "filled"
-
-                                MDButtonText:
-                                    text: "test6"
-                            MDButton:
-                                id: test7_button
-                                style: "filled"
-
-                                MDButtonText:
-                                    text: "test7"
-                            MDButton:
-                                id: test8_button
-                                style: "filled"
-
-                                MDButtonText:
-                                    text: "test8"
-                            
-                    BoxLayout: 
-                        orientation: "vertical"                   
-                        spacing: 15
-                        padding: 15
-
+                                    text: "Savenigs Overview"    
                         MDButton:
-                            id: login_page
-                            style: "filled"
-                            size_hint_x: None
-                            width: 300
-                            pos_hint: {"center_x": 0.5}
-                            on_press: app.root.current = 'login'
-                            
+                            style: "tonal"
+                            on_release: app.root.current = "target"
                             MDButtonText:
-                                text:"Login Page"
-                          
-
-                        MDButton:
-                            id: register_page
-                            style: "filled"
-                            size_hint_x: None
-                            width: 300
-                            pos_hint: {"center_x": 0.5}  
-                            on_press: app.root.current = 'register'
-
-                            MDButtonText:
-                                text:"Register Page"
+                                text: "View All Savings Goals"                     

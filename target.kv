@@ -1,0 +1,95 @@
+#:import hex_color kivy.utils.get_color_from_hex
+
+<Target>:
+    MDScreen:
+        md_bg_color: self.theme_cls.backgroundColor
+
+    MDBoxLayout:
+        orientation: 'vertical'
+
+        MDTopAppBar:
+            id: topbaraction
+            type: "small"
+            theme_bg_color: "Custom"
+            md_bg_color: hex_color("#ff00aae0")
+
+            MDTopAppBarLeadingButtonContainer:
+                MDActionTopAppBarButton:
+                    icon: "home"
+                    on_release: app.root.current = "main"       
+                MDActionTopAppBarButton:
+                    icon: "theme-light-dark"
+                    on_release: app.switch_theme_style()
+                        
+            MDTopAppBarTitle:
+                text: "PiggyBank"
+                halign: "center"
+
+            MDTopAppBarTrailingButtonContainer:
+                MDActionTopAppBarButton:
+                    id: account_button
+                    icon: "account-circle-outline"
+                    on_release: app.open_account_menu(self)
+
+        MDScrollView:
+            do_scroll_x: False
+            
+            MDBoxLayout:
+                orientation: 'vertical'
+                adaptive_height: True
+                padding: "20dp"
+                spacing: "30dp"
+
+                MDCard:
+                    size_hint: 1, None
+                    height: "380dp"
+                    padding: "20dp"
+                    elevation: 2
+                    style: "elevated"
+
+                    MDBoxLayout:
+                        orientation: 'vertical'
+                        spacing: "15dp"
+
+                        MDLabel:
+                            text: "Set a New Goal"
+                            style: "headline-small"
+                            halign: "center"
+
+                        MDTextField:
+                            id: goal_name
+                            mode: "outlined"
+                            MDTextFieldHintText:
+                                text: "What are you saving for?"
+                        
+                        MDTextField:
+                            id: target_amount
+                            mode: "outlined"
+                            input_filter: "float"
+                            MDTextFieldHintText:
+                                text: "Target Amount ($)"
+                        
+                        MDButton:
+                            style: "filled"
+                            pos_hint: {"center_x": .5}
+                            on_release: root.save_goal()
+                            MDButtonText:
+                                text: "Create Goal"
+
+                        MDButton:
+                            style: "text"
+                            pos_hint: {"center_x": .5}
+                            on_release: app.root.current = "main"
+                            MDButtonText:
+                                text: "Cancel"
+
+                MDLabel:
+                    text: "My Progress"
+                    style: "title-large"
+                    padding: "10dp"
+
+                MDBoxLayout:
+                    id: goal_container 
+                    orientation: 'vertical'
+                    adaptive_height: True
+                    spacing: "15dp"

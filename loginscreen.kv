@@ -29,6 +29,7 @@
                     MDActionTopAppBarButton:
                         id: account_button
                         icon: "account-circle-outline"
+                        on_release: app.open_account_menu(self)
             FloatLayout:
                 orientation: 'vertical'
                 pos_hint: {'center_x': 0.5,'center_y': 0.5}
@@ -96,13 +97,3 @@
                                 on_press: root.login_process()
                                 MDButtonText:
                                     text: "Login"
-
-                            MDButton:
-                                id:register_page
-                                style: "filled"
-                                size_hint_x: None
-                                width:800
-                                on_press:app.root.current = 'register'
-            
-                                MDButtonText:
-                                    text: "Register Page"
