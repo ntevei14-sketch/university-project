@@ -15,6 +15,7 @@ from kivymd.uix.behaviors import RectangularRippleBehavior
 from kivy.uix.behaviors import ButtonBehavior
 from utlity import is_valid_email
 from kivymd.uix.pickers import MDModalDatePicker
+from kivymd.uix.list import MDListItem, MDListItemHeadlineText, MDListItemSupportingText, MDListItemTertiaryText
 
 
 class MainScreen(Screen):
@@ -339,23 +340,71 @@ class PiggyBankLauncher(MDApp):
         main_screen = self.root.get_screen('main')
         main_screen.ids.balance_label.text = "Balance:$0.00"
         main_screen.ids.total_label.text = "Saveings:$0.00"
-
+        main_screen.ids.bills_history_list.clear_widgets()
+        main_screen.ids.goals_preview_list.clear_widgets()
         if self.menu:
             self.menu.dismiss()
 
-        self.root.current = "login"
+        self.root.current = "main"
 
     def update_dashboard(self):
-
         if self.current_user_id:
+
             conn = get_connection()
             total_in, total_ex, balance = get_user_stats(
                 conn, self.current_user_id)
+            bills_data = get_expenses(conn, self.current_user_id)
+            goals_data = get_goals(conn, self.current_user_id)
             conn.close()
 
             main_screen = self.root.get_screen('main')
-            main_screen.ids.balance_label.text = f"Balance:${total_in:,.2f}"
-            main_screen.ids.total_label.text = f"Saveings:${balance:,.2f}"
+
+            main_screen.ids.balance_label.text = f"Balance: ${total_in:,.2f}"
+            main_screen.ids.total_label.text = f"Savings: ${balance:,.2f}"
+
+            history_list = main_screen.ids.bills_history_list
+            history_list.clear_widgets()
+
+            for b_id, amount, category, due_date in bills_data:
+
+                item = MDListItem(
+                    MDListItemHeadlineText(text=str(category)),
+                    MDListItemSupportingText(text=f"Due: {due_date}"),
+                    MDListItemTertiaryText(text=f"${amount:,.2f}"),
+                    height="72dp",
+                    size_hint_y=None
+                )
+                history_list.add_widget(item)
+
+            goals_preview = main_screen.ids.goals_preview_list
+            goals_preview.clear_widgets()
+
+            for g_id, name, target, saved in goals_data[:3]:
+
+                percentage = (saved / target) if target > 0 else 0
+                val = min(percentage * 100, 100)
+                goal_card = MDCard(
+                    orientation='vertical',
+                    size_hint=(1, None),
+                    height="55dp",
+                    padding="8dp",
+                    spacing="4dp",
+                    style="filled",
+                    theme_bg_color="Custom",
+                    md_bg_color=self.theme_cls.surfaceColor
+                )
+
+                goal_card.add_widget(MDLabel(text=name, style="label-medium"))
+                goal_card.add_widget(
+                    MDLabel(text=f"${saved:,.0f}/${target:,.0f}", style="label-small"))
+
+                progress = MDLinearProgressIndicator(
+                    value=val,
+                    size_hint_y=None,
+                    height="4dp"
+                )
+                goal_card.add_widget(progress)
+                goals_preview.add_widget(goal_card)
 
     def build(self):
         connection = get_connection()
