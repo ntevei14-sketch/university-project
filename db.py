@@ -55,6 +55,7 @@ def create_table(connection):
                     user_id INTEGER,
                     amount REAL NOT NULL,
                     category TEXT,
+                    due_date TEXT,
                     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (user_id) REFERENCES user_data (id)
                 );""")
@@ -137,12 +138,13 @@ def add_income(connection, user_id, amount, source="General"):
 # adding expense function
 
 
-def add_expense(connection, user_id, amount, category="General"):
+def add_expense(connection, user_id, amount, category, due_date):
     with connection:
         connection.execute(
-            "INSERT INTO expenses (user_id, amount, category) VALUES (?, ?, ?);",
-            (user_id, amount, category)
+            "INSERT INTO expenses (user_id, amount, category, due_date) VALUES (?, ?, ?, ?);",
+            (user_id, amount, category, due_date)
         )
+
 # goal function
 
 
@@ -167,6 +169,16 @@ def update_goal_progress(connection, goal_id, amount):
             "UPDATE goals SET current_saved = current_saved + ? WHERE id = ?",
             (amount, goal_id)
         )
+
+
+def get_expenses(connection, user_id):
+    cursor = connection.cursor()
+    cursor.execute(
+        "SELECT id, amount, category, date FROM expenses WHERE user_id = ? ORDER BY date DESC",
+        (user_id,)
+    )
+    return cursor.fetchall()
+
 # main
 
 

@@ -56,17 +56,30 @@
                         mode: "outlined"
                         input_filter: "float"
                         MDTextFieldHintText:
-                            text: "Amount (e.g. 50.25)"
+                            text: "Add Amount"
                         MDTextFieldLeadingIcon:
                             icon: "currency-usd"
 
                     MDButton:
-                        id: drop_item
                         style: "outlined"
                         pos_hint: {"center_x": .5}
                         on_release: root.open_category_menu(self)
                         MDButtonText:
+                            id: drop_item
                             text: "Select Category"
+                    
+                    MDLabel:
+                        id: date_label
+                        text: "No Date Selected"
+                        halign: "center"
+                        style: "body-medium"
+
+                    MDButton:
+                        style: "outlined"
+                        pos_hint: {"center_x": .5}
+                        on_release: root.show_date_picker()
+                        MDButtonText:
+                            text: "Pick Due Date"
 
                     MDButton:
                         style: "filled"

@@ -10,10 +10,21 @@ from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 from kivymd.uix.progressindicator import MDLinearProgressIndicator
 from kivymd.uix.dialog import MDDialog, MDDialogButtonContainer, MDDialogHeadlineText, MDDialogContentContainer
 from kivy.animation import Animation
-from db import get_connection, create_table, add_user, verify_user, get_user_stats, add_income, add_expense, add_goal, get_goals, update_goal_progress
+from db import get_connection, create_table, add_user, verify_user, get_user_stats, add_income, add_expense, add_goal, get_goals, update_goal_progress, get_expenses
+from kivymd.uix.behaviors import RectangularRippleBehavior
+from kivy.uix.behaviors import ButtonBehavior
+from utlity import is_valid_email
+from kivymd.uix.pickers import MDModalDatePicker
 
 
 class MainScreen(Screen):
+    def on_enter(self):
+
+        app = MDApp.get_running_app()
+        app.update_dashboard()
+
+
+class ImageGrid(RectangularRippleBehavior, ButtonBehavior, MDBoxLayout):
     pass
 
 
@@ -37,7 +48,8 @@ class SplashScreen(Screen):
 
 
 class LoginScreen(Screen):
-    def on_pre_enter(self):
+
+    def on_pre_enter(self, *args):
         self.ids.email.text = ""
         self.ids.password.text = ""
 
@@ -45,8 +57,22 @@ class LoginScreen(Screen):
         email = self.ids.email.text
         password = self.ids.password.text
 
+        if not is_valid_email(email):
+            MDSnackbar(
+                MDSnackbarText(text="Please enter a valid email address."),
+                y="24dp",
+                pos_hint={"center_x": 0.5},
+                size_hint_x=0.8,
+            ).open()
+            return
+
         if not email or not password:
-            print("Please fill in all fields")
+            MDSnackbar(
+                MDSnackbarText(text="please fill the empty fileds"),
+                y="24dp",
+                pos_hint={"center_x": 0.5},
+                size_hint_x=0.8,
+            ).open()
             return
 
         try:
@@ -54,9 +80,9 @@ class LoginScreen(Screen):
             user_id = verify_user(conn, email, password)
             conn.close()
 
-            if user_id is not None:
+            if user_id:
                 MDSnackbar(
-                    MDSnackbarText(text="Login Successful! Welcome back."),
+                    MDSnackbarText(text=f"Login Successful! Welcome back "),
                     y="24dp",
                     pos_hint={"center_x": 0.5},
                     size_hint_x=0.8,
@@ -67,8 +93,6 @@ class LoginScreen(Screen):
 
                 app.update_dashboard()
 
-                self.ids.email.text = ""
-                self.ids.password.text = ""
                 self.manager.current = "main"
             else:
                 MDSnackbar(
@@ -79,8 +103,8 @@ class LoginScreen(Screen):
                     size_hint_x=0.8,
                 ).open()
 
-        except Exception as e:
-            print(f"Login error: {e}")
+        except Exception:
+            return
 
 
 class AddFund(Screen):
@@ -100,14 +124,22 @@ class AddFund(Screen):
 
 class Bill(Screen):
 
+    selected_date = None
+
+    def on_pre_enter(self):
+        self.ids.drop_item.text = "Select Category"
+        self.ids.date_label.text = "No Date Selected"
+        self.selected_date = None
+
     def open_category_menu(self, item):
         # List of categories for bills
         categories = ["Rent", "Water Bill", "Electricty", "Car Payment",
-                      "Transpot", "Entertemnt", "grocery", "saveings"]
+                      "Transpot", "Entertemnt", "grocery", "Other"]
 
         menu_items = [
             {
                 "text": i,
+                "leading_icon": "tag-outline",
                 "on_release": lambda x=i: self.set_item(x),
             } for i in categories
         ]
@@ -115,34 +147,77 @@ class Bill(Screen):
         self.menu.open()
 
     def set_item(self, text_item):
-        self.ids.drop_item.text = text_item  # Update the button text
+        self.ids.drop_item.text = f"Category: {text_item}"
         self.menu.dismiss()
+
+    def show_date_picker(self):
+        date_dialog = MDModalDatePicker()
+        date_dialog.bind(on_ok=self.on_ok, on_cancel=self.on_cancel)
+        date_dialog.open()
+
+    def on_ok(self, instance):
+        dates = instance.get_date()
+        if dates:
+            self.selected_date = dates[0].strftime('%Y-%m-%d')
+            self.ids.date_label.text = f"Due Date: {self.selected_date}"
+        instance.dismiss()
+
+    def on_cancel(self, instance):
+        instance.dismiss()
 
     def save_expense(self):
         amount = self.ids.bill_amount.text
-        category = self.ids.drop_item.text  # Get the selected category
+        category = self.ids.drop_item.text
         app = MDApp.get_running_app()
 
+        if not amount or category == "Select Category" or not self.selected_date:
+            MDSnackbar(
+                MDSnackbarText(
+                    text="Please fill all fields and select category and date."),
+                y="24dp",
+                pos_hint={"center_x": 0.5},
+                size_hint_x=0.8,
+            ).open()
+            return
         if amount and app.current_user_id:
             conn = get_connection()
 
-            add_expense(conn, app.current_user_id, float(amount), category)
+            add_expense(conn, app.current_user_id, float(
+                amount), category, self.selected_date)
             conn.close()
 
             self.ids.bill_amount.text = ""
             self.ids.drop_item.text = "Select Category"
+            self.ids.date_label.text = "No Date Selected"
             app.update_dashboard()
             self.manager.current = "main"
 
 
 class Target(Screen):
-
     def on_enter(self):
         self.display_goals()
+
+    def save_goal(self):
+        name = self.ids.goal_name.text
+        amount = self.ids.target_amount.text
+        app = MDApp.get_running_app()
+
+        if name and amount and app.current_user_id:
+            conn = get_connection()
+            add_goal(conn, app.current_user_id, name, float(amount))
+            conn.close()
+
+            self.ids.goal_name.text = ""
+            self.ids.target_amount.text = ""
+            self.display_goals()
+
+            MDSnackbar(MDSnackbarText(text="Goal Created!")).open()
 
     def display_goals(self):
         self.ids.goal_container.clear_widgets()
         app = MDApp.get_running_app()
+        if not app.current_user_id:
+            return
 
         with get_connection() as conn:
             goals = get_goals(conn, app.current_user_id)
@@ -150,30 +225,21 @@ class Target(Screen):
         for g_id, name, target, saved in goals:
             percentage = (saved / target) if target > 0 else 0
 
+            val = min(percentage * 100, 100)
+
             goal_card = MDCard(
                 orientation='vertical',
                 adaptive_height=True,
                 padding="15dp",
                 spacing="10dp",
-                style="elevated",
-                md_bg_color=app.theme_cls.surfaceColor
+                style="elevated"
             )
+            goal_card.add_widget(MDLabel(text=f"{name}", style="title-medium"))
             goal_card.add_widget(
-                MDLabel(
-                    text=f"{name}",
-                    style="title-medium"
-                )
-            )
-
-            goal_card.add_widget(
-                MDLabel(
-                    text=f"${saved:,.2f} of ${target:,.2f}",
-                    style="body-small"
-                )
-            )
+                MDLabel(text=f"${saved:,.2f} of ${target:,.2f}", style="body-small"))
 
             progress = MDLinearProgressIndicator(
-                value=percentage * 100,
+                value=val,
                 size_hint_y=None,
                 height="10dp"
             )
@@ -196,6 +262,15 @@ class RegisterScreen(Screen):
         password = self.ids.r_password.text
         phone = self.ids.r_phone.text
 
+        if not is_valid_email(email):
+            MDSnackbar(
+                MDSnackbarText(text="Please enter a valid email address."),
+                y="24dp",
+                pos_hint={"center_x": 0.5},
+                size_hint_x=0.8,
+            ).open()
+            return
+
         if name and email and password:
             try:
 
@@ -215,13 +290,19 @@ class RegisterScreen(Screen):
             except Exception:
                 MDSnackbar(
                     MDSnackbarText(
-                        text="Error: Email might already be registered."),
+                        text="there is already an existed email, please try another one"),
                     y="24dp",
                     pos_hint={"center_x": 0.5},
                     size_hint_x=0.8,
                 ).open()
         else:
-            print("error")
+            MDSnackbar(
+                MDSnackbarText(
+                    text="please fill the empty fileds"),
+                y="24dp",
+                pos_hint={"center_x": 0.5},
+                size_hint_x=0.8,
+            ).open()
 
 
 class PiggyBankLauncher(MDApp):
@@ -256,8 +337,8 @@ class PiggyBankLauncher(MDApp):
         self.current_user_id = None
 
         main_screen = self.root.get_screen('main')
-        main_screen.ids.balance_label.text = "$0.00"
-        main_screen.ids.total_label.text = "$0.00"
+        main_screen.ids.balance_label.text = "Balance:$0.00"
+        main_screen.ids.total_label.text = "Saveings:$0.00"
 
         if self.menu:
             self.menu.dismiss()
@@ -273,10 +354,8 @@ class PiggyBankLauncher(MDApp):
             conn.close()
 
             main_screen = self.root.get_screen('main')
-
-            main_screen.ids.balance_label.text = f"${balance:,.2f}"
-
-            main_screen.ids.total_label.text = f"Total Spent: ${total_ex:,.2f}"
+            main_screen.ids.balance_label.text = f"Balance:${total_in:,.2f}"
+            main_screen.ids.total_label.text = f"Saveings:${balance:,.2f}"
 
     def build(self):
         connection = get_connection()
@@ -284,7 +363,7 @@ class PiggyBankLauncher(MDApp):
         connection.close()
         # theme
         self.theme_cls.theme_style = "Light"
-        self.theme_cls.primary_palette = "Indigo"
+        self.theme_cls.primary_palette = "Pink"
         # builder
         Builder.load_file("splashscreen.kv")
         Builder.load_file("mainscreen.kv")
@@ -303,6 +382,7 @@ class PiggyBankLauncher(MDApp):
         sm.add_widget(Bill(name="bill"))
         sm.add_widget(Target(name="target"))
         sm.current = "splash"
+
         return sm
 
     # function to switch between light and dark mode
@@ -312,7 +392,7 @@ class PiggyBankLauncher(MDApp):
             "Pink" if self.theme_cls.primary_palette == "Indigo" else "Indigo"
         )
         self.theme_cls.theme_style = (
-            "Dark" if self.theme_cls.theme_style == "Light" else "Light"
+            "Light" if self.theme_cls.theme_style == "Dark" else "Dark"
         )
 
 
