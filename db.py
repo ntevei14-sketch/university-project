@@ -171,10 +171,17 @@ def update_goal_progress(connection, goal_id, amount):
         )
 
 
+def delete_goal_from_db(connection, goal_id):
+    with connection:
+        connection.execute("DELETE FROM goals WHERE id = ?", (goal_id,))
+
+
 def get_expenses(connection, user_id):
     cursor = connection.cursor()
     cursor.execute(
-        "SELECT id, amount, category, due_date FROM expenses WHERE user_id = ? ORDER BY date DESC",
+        """SELECT id, amount, category, due_date FROM expenses 
+           WHERE user_id = ? AND category != 'Goal Funding' 
+           ORDER BY date DESC""",
         (user_id,)
     )
     return cursor.fetchall()

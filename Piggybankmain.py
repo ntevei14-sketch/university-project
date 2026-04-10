@@ -10,19 +10,20 @@ from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 from kivymd.uix.progressindicator import MDLinearProgressIndicator
 from kivymd.uix.dialog import MDDialog, MDDialogButtonContainer, MDDialogHeadlineText, MDDialogContentContainer
 from kivy.animation import Animation
-from db import get_connection, create_table, add_user, verify_user, get_user_stats, add_income, add_expense, add_goal, get_goals, update_goal_progress, get_expenses
+from db import delete_goal_from_db, get_connection, create_table, add_user, verify_user, get_user_stats, add_income, add_expense, add_goal, get_goals, update_goal_progress, get_expenses
 from kivymd.uix.behaviors import RectangularRippleBehavior
 from kivy.uix.behaviors import ButtonBehavior
 from utlity import is_valid_email
+from kivy.factory import Factory
 from kivymd.uix.pickers import MDModalDatePicker
 from kivymd.uix.list import MDListItem, MDListItemHeadlineText, MDListItemSupportingText, MDListItemTertiaryText
 
 
 class MainScreen(Screen):
+
     def on_enter(self):
 
-        app = MDApp.get_running_app()
-        app.update_dashboard()
+        MDApp.get_running_app().update_dashboard()
 
 
 class ImageGrid(RectangularRippleBehavior, ButtonBehavior, MDBoxLayout):
@@ -195,8 +196,6 @@ class Bill(Screen):
 
 
 class Target(Screen):
-    def on_enter(self):
-        self.display_goals()
 
     def save_goal(self):
         name = self.ids.goal_name.text
@@ -204,48 +203,127 @@ class Target(Screen):
         app = MDApp.get_running_app()
 
         if name and amount and app.current_user_id:
-            conn = get_connection()
-            add_goal(conn, app.current_user_id, name, float(amount))
-            conn.close()
+            try:
+                conn = get_connection()
+                add_goal(conn, app.current_user_id, name, float(amount))
+                conn.close()
 
-            self.ids.goal_name.text = ""
-            self.ids.target_amount.text = ""
-            self.display_goals()
+                self.ids.goal_name.text = ""
+                self.ids.target_amount.text = ""
 
-            MDSnackbar(MDSnackbarText(text="Goal Created!")).open()
+                MDSnackbar(MDSnackbarText(
+                    text="Goal created successfully!")).open()
 
-    def display_goals(self):
-        self.ids.goal_container.clear_widgets()
+            except ValueError:
+                MDSnackbar(MDSnackbarText(
+                    text="Please enter a valid number")).open()
+
+
+class GoalsPreview(Screen):
+    fund_dialog = None
+    current_funding_id = None
+
+    def on_enter(self):
+        self.display_all_goals()
+
+    def display_all_goals(self):
+        container = self.ids.all_goals_container
+        container.clear_widgets()
         app = MDApp.get_running_app()
-        if not app.current_user_id:
-            return
 
         with get_connection() as conn:
             goals = get_goals(conn, app.current_user_id)
 
         for g_id, name, target, saved in goals:
-            percentage = (saved / target) if target > 0 else 0
+            perc = (saved / target) if target > 0 else 0
 
-            val = min(percentage * 100, 100)
+            item = Factory.GoalItem()
+            item.goal_id = g_id
+            item.goal_name = name
+            item.saved_text = f"Saved: ${saved:,.2f} / Goal: ${target:,.2f}"
+            item.progress_value = min(perc * 100, 100)
+            container.add_widget(item)
 
-            goal_card = MDCard(
-                orientation='vertical',
-                adaptive_height=True,
-                padding="15dp",
-                spacing="10dp",
-                style="elevated"
+    def delete_goal(self, goal_id):
+        with get_connection() as conn:
+            delete_goal_from_db(conn, goal_id)
+        self.display_all_goals()
+        MDSnackbar(MDSnackbarText(text="Goal deleted.")).open()
+
+    def open_fund_dialog(self, goal_id):
+        self.current_funding_id = goal_id
+
+        self.amount_input = Factory.MDTextField(
+            hint_text="Amount",
+            input_filter="float"
+        )
+
+        self.fund_dialog = MDDialog(
+            MDDialogHeadlineText(text="Add Funds"),
+            MDDialogContentContainer(
+                MDBoxLayout(
+                    self.amount_input,
+                    orientation="vertical",
+                    adaptive_height=True
+                )
+            ),
+            MDDialogButtonContainer(
+                Factory.MDButton(
+                    Factory.MDButtonText(text="Cancel"),
+                    style="text",
+                    on_release=lambda x: self.fund_dialog.dismiss()
+                ),
+                Factory.MDButton(
+                    Factory.MDButtonText(text="Save"),
+                    style="tonal",
+                    on_release=self.confirm_funding
+                ),
             )
-            goal_card.add_widget(MDLabel(text=f"{name}", style="title-medium"))
-            goal_card.add_widget(
-                MDLabel(text=f"${saved:,.2f} of ${target:,.2f}", style="body-small"))
+        )
+        self.fund_dialog.open()
 
-            progress = MDLinearProgressIndicator(
-                value=val,
-                size_hint_y=None,
-                height="10dp"
+    def confirm_funding(self, *args):
+        try:
+            amt = float(self.amount_input.text or 0)
+        except ValueError:
+            return
+
+        app = MDApp.get_running_app()
+        is_completed = False
+
+        with get_connection() as conn:
+            _, _, balance = get_user_stats(conn, app.current_user_id)
+
+            if amt > balance:
+                MDSnackbar(MDSnackbarText(text="Insufficient Balance!")).open()
+                return
+
+            add_expense(conn, app.current_user_id, amt,
+                        "Goal Funding", "Internal Transfer")
+            update_goal_progress(conn, self.current_funding_id, amt)
+
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT current_saved, target_amount FROM goals WHERE id = ?",
+                (self.current_funding_id,)
             )
-            goal_card.add_widget(progress)
-            self.ids.goal_container.add_widget(goal_card)
+            goal_data = cursor.fetchone()
+
+            if goal_data:
+                saved, target = goal_data
+                if saved >= target:
+                    delete_goal_from_db(conn, self.current_funding_id)
+                    is_completed = True
+
+        self.fund_dialog.dismiss()
+        self.display_all_goals()
+        app.update_dashboard()
+
+        if is_completed:
+            MDSnackbar(MDSnackbarText(
+                text="Goal Reached! Target deleted.")).open()
+        else:
+            MDSnackbar(MDSnackbarText(text="Funds added!")).open()
 
 
 class RegisterScreen(Screen):
@@ -421,6 +499,7 @@ class PiggyBankLauncher(MDApp):
         Builder.load_file("addfund.kv")
         Builder.load_file("bill.kv")
         Builder.load_file("target.kv")
+        Builder.load_file("goalspreview.kv")
         # screens
         sm = ScreenManager(transition=NoTransition())
         sm.add_widget(SplashScreen(name="splash"))
@@ -430,6 +509,7 @@ class PiggyBankLauncher(MDApp):
         sm.add_widget(AddFund(name="addfund"))
         sm.add_widget(Bill(name="bill"))
         sm.add_widget(Target(name="target"))
+        sm.add_widget(GoalsPreview(name="goalspreview"))
         sm.current = "splash"
 
         return sm

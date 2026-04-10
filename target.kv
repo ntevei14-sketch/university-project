@@ -22,7 +22,7 @@
                     on_release: app.switch_theme_style()
                         
             MDTopAppBarTitle:
-                text: "PiggyBank"
+                text: "PiggyBankExpanseTracker"
                 halign: "center"
 
             MDTopAppBarTrailingButtonContainer:
@@ -82,14 +82,3 @@
                             on_release: app.root.current = "main"
                             MDButtonText:
                                 text: "Cancel"
-
-                MDLabel:
-                    text: "My Progress"
-                    style: "title-large"
-                    padding: "10dp"
-
-                MDBoxLayout:
-                    id: goal_container 
-                    orientation: 'vertical'
-                    adaptive_height: True
-                    spacing: "15dp"

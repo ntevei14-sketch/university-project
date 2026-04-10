@@ -1,0 +1,84 @@
+#:import hex_color kivy.utils.get_color_from_hex
+
+<GoalsPreview>:
+    MDBoxLayout:
+        orientation: 'vertical'
+        md_bg_color: self.theme_cls.backgroundColor
+
+        MDTopAppBar:
+            id: topbaraction
+            type: "small"
+            theme_bg_color: "Custom"
+            md_bg_color: hex_color("#ff00aae0")
+
+            MDTopAppBarLeadingButtonContainer:
+                MDActionTopAppBarButton:
+                    icon: "home"
+                    on_release: app.root.current = "main"       
+                MDActionTopAppBarButton:
+                    icon: "theme-light-dark"
+                    on_release: app.switch_theme_style()
+                        
+            MDTopAppBarTitle:
+                text: "PiggyBankExpanseTracker"
+                halign: "center"
+
+            MDTopAppBarTrailingButtonContainer:
+                MDActionTopAppBarButton:
+                    id: account_button
+                    icon: "account-circle-outline"
+                    on_release: app.open_account_menu(self)
+
+
+        MDScrollView:
+            do_scroll_x: False
+            MDBoxLayout:
+                id: all_goals_container
+                orientation: 'vertical'
+                adaptive_height: True
+                padding: "16dp"
+                spacing: "16dp"
+
+
+<GoalItem@MDCard>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: "180dp"
+    padding: "15dp"
+    spacing: "10dp"
+    style: "elevated"
+    theme_bg_color: "Custom"
+    md_bg_color: self.theme_cls.surfaceContainerLowColor
+
+    goal_id: 0
+    goal_name: ""
+    saved_text: ""
+    progress_value: 0
+
+    MDBoxLayout:
+        adaptive_height: True
+        MDLabel:
+            text: root.goal_name
+            style: "title-medium"
+        MDIconButton:
+            icon: "delete-outline"
+            theme_icon_color: "Custom"
+            icon_color: 1, 0, 0, 1
+            on_release: app.root.get_screen('goalspreview').delete_goal(root.goal_id)
+
+    MDLabel:
+        text: root.saved_text
+        style: "body-medium"
+        adaptive_height: True
+
+    MDLinearProgressIndicator:
+        value: root.progress_value
+        size_hint_y: None
+        height: "8dp"
+
+    MDButton:
+        style: "tonal"
+        pos_hint: {"right": 1}
+        on_release: app.root.get_screen('goalspreview').open_fund_dialog(root.goal_id)
+        MDButtonText:
+            text: "Add Funds"
