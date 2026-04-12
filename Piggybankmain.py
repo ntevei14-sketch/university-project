@@ -17,13 +17,16 @@ from utlity import is_valid_email
 from kivy.factory import Factory
 from kivymd.uix.pickers import MDModalDatePicker
 from kivymd.uix.list import MDListItem, MDListItemHeadlineText, MDListItemSupportingText, MDListItemTertiaryText
+from plyer import notification
+from datetime import datetime
 
 
 class MainScreen(Screen):
 
     def on_enter(self):
-
-        MDApp.get_running_app().update_dashboard()
+        app = MDApp.get_running_app()
+        app.update_dashboard()
+        app.check_for_notifications()
 
 
 class ImageGrid(RectangularRippleBehavior, ButtonBehavior, MDBoxLayout):
@@ -92,9 +95,8 @@ class LoginScreen(Screen):
 
                 app = MDApp.get_running_app()
                 app.current_user_id = user_id
-
                 app.update_dashboard()
-
+                app.check_for_notifications()
                 self.manager.current = "main"
             else:
                 MDSnackbar(
@@ -384,6 +386,45 @@ class RegisterScreen(Screen):
             ).open()
 
 
+class NotificationManager:
+
+    def __init__(self, db_path="user_data.db"):
+        self.db_path = db_path
+
+    def check_due_bills(self, user_id):
+
+        today = datetime.now().strftime('%Y-%m-%d')
+
+        try:
+
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute(
+                "SELECT category, amount FROM expenses WHERE user_id = ? AND due_date = ?",
+                (user_id, today)
+            )
+            due_items = cursor.fetchall()
+            conn.close()
+
+            for category, amount in due_items:
+                self.send_push(category, amount)
+
+        except Exception as e:
+            print(f"Notification System Error: {e}")
+
+    def send_push(self, bill_name, amount):
+
+        clean_name = str(bill_name).replace("Category: ", "").title()
+
+        notification.notify(
+            title="Its pay time",
+            message=f"Your {clean_name} bill of ${amount:,.2f} is due today.",
+            app_name="PiggyBank",
+            timeout=8
+        )
+
+
 class PiggyBankLauncher(MDApp):
     current_user_id = None
     menu = None
@@ -491,6 +532,8 @@ class PiggyBankLauncher(MDApp):
         # theme
         self.theme_cls.theme_style = "Light"
         self.theme_cls.primary_palette = "Pink"
+        # notfication manager
+        self.notif_manager = NotificationManager()
         # builder
         Builder.load_file("splashscreen.kv")
         Builder.load_file("mainscreen.kv")
@@ -513,6 +556,10 @@ class PiggyBankLauncher(MDApp):
         sm.current = "splash"
 
         return sm
+
+    def check_for_notifications(self):
+        if self.current_user_id:
+            self.notif_manager.check_due_bills(self.current_user_id)
 
     # function to switch between light and dark mode
 

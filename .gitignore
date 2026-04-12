@@ -12,3 +12,10 @@ __pycache__/
 
 # Ignore Kivy log files
 .kivy/
+
+#Ignore dist files
+dist/
+#Ignore spec file
+piggybanklauncher.spec
+#Ignore build files
+build/
