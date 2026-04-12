@@ -1,34 +1,18 @@
-   def on_enter(self):
-        self.display_all_goals()
+        except Exception as e:
+            print(f"Notification System Error: {e}")
 
-    def display_all_goals(self):
-        container = self.ids.all_goals_container
-        container.clear_widgets()
+    def send_push(self, bill_name, amount):
 
-        app = MDApp.get_running_app()
-        if not app.current_user_id:
-            return
+        clean_name = str(bill_name).replace("Category: ", "").title()
 
-        with get_connection() as conn:
-            goals = get_goals(conn, app.current_user_id)
+        notification.notify(
+            title="Its pay time",
+            message=f"Your {clean_name} bill of ${amount:,.2f} is due today.",
+            app_name="PiggyBank",
+            timeout=4
+        )
 
-        for g_id, name, target, saved in goals:
-            perc = (saved / target * 100) if target > 0 else 0
 
-            item = Builder.template(
-                'GoalItem',
-                goal_id=g_id,
-                goal_name=name,
-                saved_text=f"${saved:,.2f} / ${target:,.2f}",
-                progress_value=min(perc, 100)
-            )
-            container.add_widget(item)
-
-    def delete_goal(self, goal_id):
-
-        print(f"Goal {goal_id} has been deleted.")
-        self.display_all_goals()
-
-    def open_fund_dialog(self, goal_id):
-
-        print(f"Logic to add funds to goal ID: {goal_id}")
+class Saveingsview(Screen):
+    def on_enter(self):
+        self.update_view()

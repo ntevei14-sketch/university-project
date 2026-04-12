@@ -16,7 +16,7 @@ from kivy.uix.behaviors import ButtonBehavior
 from utlity import is_valid_email
 from kivy.factory import Factory
 from kivymd.uix.pickers import MDModalDatePicker
-from kivymd.uix.list import MDListItem, MDListItemHeadlineText, MDListItemSupportingText, MDListItemTertiaryText
+from kivymd.uix.list import MDListItem, MDListItemHeadlineText, MDListItemSupportingText, MDListItemTertiaryText, MDListItemLeadingIcon
 from plyer import notification
 from datetime import datetime
 
@@ -421,8 +421,78 @@ class NotificationManager:
             title="Its pay time",
             message=f"Your {clean_name} bill of ${amount:,.2f} is due today.",
             app_name="PiggyBank",
-            timeout=8
+            timeout=4
         )
+
+
+class Saveingsview(Screen):
+    def on_enter(self):
+        self.update_view()
+
+    def update_view(self):
+        app = MDApp.get_running_app()
+        if not app.current_user_id:
+            return
+
+        history_list = self.ids.get('history_list')
+        if not history_list:
+            return
+
+        history_list.clear_widgets()
+
+        with get_connection() as conn:
+            total_in, total_ex, balance = get_user_stats(
+                conn, app.current_user_id)
+
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT 'income' as type, amount, source as name, date FROM incomes WHERE user_id = ?
+                UNION ALL
+                SELECT 'expense' as type, amount, category as name, due_date as date FROM expenses WHERE user_id = ?
+                UNION ALL
+                SELECT 'goal' as type, current_saved as amount, goal_name as name, '0000-00-00' as date FROM goals WHERE user_id = ?
+                ORDER BY date DESC
+            """, (app.current_user_id, app.current_user_id, app.current_user_id))
+            history = cursor.fetchall()
+
+        self.ids.total_income_label.text = f"${total_in:,.2f}"
+        self.ids.total_expense_label.text = f"${total_ex:,.2f}"
+
+        if total_in > 0:
+            percent_spent = (total_ex / total_in) * 100
+            self.ids.spending_progress.value = min(percent_spent, 100)
+        else:
+            self.ids.spending_progress.value = 0
+
+        for trans_type, amount, name, date in history:
+
+            clean_name = str(name).title()
+
+            if trans_type == 'income':
+                display_text = f"+ ${amount:,.2f}"
+                text_color = (0, 0.6, 0, 1)
+                icon = "cash-plus"
+            elif trans_type == 'expense':
+                display_text = f"- ${amount:,.2f}"
+                text_color = (0.8, 0, 0, 1)
+                icon = "cash-minus"
+            else:
+                display_text = f"Saved: ${amount:,.2f}"
+                text_color = (0, 0.4, 0.8, 1)
+                icon = "target"
+                date = "Goal Progress"
+
+            item = MDListItem(
+                MDListItemLeadingIcon(icon=icon),
+                MDListItemHeadlineText(text=clean_name),
+                MDListItemSupportingText(text=str(date)),
+                MDListItemTertiaryText(
+                    text=display_text,
+                    theme_text_color="Custom",
+                    text_color=text_color
+                ),
+            )
+            history_list.add_widget(item)
 
 
 class PiggyBankLauncher(MDApp):
@@ -543,6 +613,7 @@ class PiggyBankLauncher(MDApp):
         Builder.load_file("bill.kv")
         Builder.load_file("target.kv")
         Builder.load_file("goalspreview.kv")
+        Builder.load_file("saveingsview.kv")
         # screens
         sm = ScreenManager(transition=NoTransition())
         sm.add_widget(SplashScreen(name="splash"))
@@ -553,6 +624,8 @@ class PiggyBankLauncher(MDApp):
         sm.add_widget(Bill(name="bill"))
         sm.add_widget(Target(name="target"))
         sm.add_widget(GoalsPreview(name="goalspreview"))
+        sm.add_widget(Saveingsview(name="saveingsview"))
+
         sm.current = "splash"
 
         return sm
